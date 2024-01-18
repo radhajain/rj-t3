@@ -1,13 +1,12 @@
 import { z } from "zod";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "~/server/api/trpc";
+import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const postRouter = createTRPCRouter({
-  create: protectedProcedure
+  getAll: publicProcedure.query(({ ctx }) => {
+    return ctx.db.post.findMany();
+  }),
+  create: publicProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       // simulate a slow db call
@@ -16,20 +15,13 @@ export const postRouter = createTRPCRouter({
       return ctx.db.post.create({
         data: {
           name: input.name,
-          createdBy: { connect: { id: ctx.session.user.id } },
         },
       });
     }),
-  
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.db.post.findMany();
-  }),
 
-  getLatestForUser: protectedProcedure.query(({ ctx }) => {
+  getLatest: publicProcedure.query(({ ctx }) => {
     return ctx.db.post.findFirst({
       orderBy: { createdAt: "desc" },
-      where: { createdBy: { id: ctx.session.user.id } },
     });
   }),
-
 });
