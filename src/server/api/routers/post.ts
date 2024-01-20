@@ -1,24 +1,26 @@
-import { z } from "zod";
+/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
+import { clerkClient } from "@clerk/nextjs";
+import { User } from "@clerk/nextjs/api";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+type UserPostInfo = {imageUrl: string, username: string | null, firstName: string | null}
+
 export const postRouter = createTRPCRouter({
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.db.post.findMany();
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    const posts = await ctx.db.post.findMany({
+      take: 100,
+    });
+    const users: User[] = await clerkClient.users.getUserList({
+      userId: [...new Set(posts.map((post) => post.authorId))],
+      limit: 100,
+    })
+    const userPostInfoById: { [id: string]: UserPostInfo } = {}
+    users.forEach(({id, imageUrl, username, firstName}) => {
+      userPostInfoById[id] = {imageUrl, username, firstName}
+    })
+    return posts.map(post => ({ post, user: userPostInfoById[post.authorId] }))
   }),
-  create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      // simulate a slow db call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      return ctx.db.post.create({
-        data: {
-          name: input.name,
-        },
-      });
-    }),
-
   getLatest: publicProcedure.query(({ ctx }) => {
     return ctx.db.post.findFirst({
       orderBy: { createdAt: "desc" },
