@@ -19,7 +19,7 @@ export const postRouter = createTRPCRouter({
     users.forEach(({id, imageUrl, username, firstName}) => {
       userPostInfoById[id] = {imageUrl, username, firstName}
     })
-    return posts.map(post => ({ post, user: userPostInfoById[post.authorId] }))
+    return posts.map(post => ({ post, author: userPostInfoById[post.authorId] }))
   }),
   getLatest: publicProcedure.query(({ ctx }) => {
     return ctx.db.post.findFirst({
