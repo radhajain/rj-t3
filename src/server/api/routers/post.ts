@@ -23,7 +23,7 @@ export const postRouter = createTRPCRouter({
     })
     return posts.map(post => ({ post, author: userPostInfoById[post.authorId] }))
   }),
-  create: protectedProcedure.input(z.object({content: z.string().min(1).max(240)})).mutation(({ ctx, input }) => {
+  create: protectedProcedure.input(z.object({content: z.string({description: "Tweets must be less than 240 charaters"}).min(1).max(240)})).mutation(({ ctx, input }) => {
     const authorId = ctx.currentUserId;
     const post = ctx.db.post.create({
       data: {

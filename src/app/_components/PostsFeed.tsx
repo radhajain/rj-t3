@@ -9,14 +9,6 @@ dayjs.extend(relativeTime)
 type PostWithUser = RouterOutputs['post']['getAll'][number]
 
 export async function PostsFeed() {
-  //   const { data, isLoading } = useQuery(
-  //     ['allPosts'],
-  //     async () => await api.post.getAll.query(),
-  //   )
-
-  //   if (isLoading) return <div>Loading...</div>
-  //   if (data == null) return <div>Could not load posts</div>
-
   const data = await api.post.getAll.query()
   console.log(data)
 
