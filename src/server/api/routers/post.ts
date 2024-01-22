@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/consistent-indexed-object-style */
 import { clerkClient } from "@clerk/nextjs";
 import { User } from "@clerk/nextjs/api";
+import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
 type UserPostInfo = {imageUrl: string, username: string | null, firstName: string | null}
 
@@ -10,6 +11,7 @@ export const postRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
     const posts = await ctx.db.post.findMany({
       take: 100,
+      orderBy: [{ createdAt: "desc"}]
     });
     const users: User[] = await clerkClient.users.getUserList({
       userId: [...new Set(posts.map((post) => post.authorId))],
@@ -21,9 +23,14 @@ export const postRouter = createTRPCRouter({
     })
     return posts.map(post => ({ post, author: userPostInfoById[post.authorId] }))
   }),
-  getLatest: publicProcedure.query(({ ctx }) => {
-    return ctx.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
+  create: protectedProcedure.input(z.object({content: z.string().min(1).max(240)})).mutation(({ ctx, input }) => {
+    const authorId = ctx.currentUserId;
+    const post = ctx.db.post.create({
+      data: {
+        authorId,
+        message: input.content
+      }
     });
+    return post
   }),
 });
