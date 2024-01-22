@@ -1,24 +1,23 @@
-import { UserButton } from '@clerk/nextjs'
-import { api } from '~/trpc/server'
+import { SignOutButton, SignedIn, UserButton } from '@clerk/nextjs'
+import { PostsFeed } from './_components/PostsFeed'
+import { CreatePostWizard } from './_components/CreatePostWizard'
 
-export default async function Home() {
-  const allPosts = await api.post.getAll.query()
-
+export default function Home() {
   return (
-    <main className='flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white'>
-      <div className='container flex flex-col items-center justify-center gap-12 px-4 py-16 '>
-        <h1 className='text-5xl font-extrabold tracking-tight sm:text-[5rem]'>
-          Create <span className='text-[hsl(280,100%,70%)]'>radha&apos;s</span>{' '}
-          App
-        </h1>
-        <UserButton afterSignOutUrl='/' />
-      </div>
-      {allPosts.map((post) => (
-        <div key={post.id}>
-          <span>{post.name}</span>
-          <div>{post.createdAt.toLocaleString()}</div>
+    <main className='flex justify-center h-screen'>
+      <div className='w-full md:max-w-6xl flex bg-white'>
+        <div className='flex flex-col gap-3 flex-1 max-w-xs p-10'>
+          <div>
+            <UserButton afterSignOutUrl='/' showName={true} />
+          </div>
         </div>
-      ))}
+        <div className='flex flex-col flex-2 gap-10 flex-grow p-10 border border-neutral-100'>
+          <SignedIn>
+            <CreatePostWizard />
+          </SignedIn>
+          <PostsFeed />
+        </div>
+      </div>
     </main>
   )
 }
